@@ -1,0 +1,130 @@
+service: the-book-store
+
+frameworkVersion: "2"
+
+provider:
+    name: aws
+    runtime: go1.x
+    lambdaHashingVersion: 20201221
+    region: ap-south-1
+    stage: prod
+
+# you can overwrite defaults here
+#  stage: dev
+#  region: us-east-1
+
+# you can add statements to the Lambda function's IAM Role here
+#  iamRoleStatements:
+#    - Effect: "Allow"
+#      Action:
+
+# you can define service wide environment variables here
+#  environment:
+#    variable1: value1
+
+#package:
+#exclude:
+#- ./**
+#include:
+#- ./bin/**
+
+functions:
+    book:
+        handler: bin/book
+        events:
+            - http:
+                  path: /book
+                  method: get
+            - http:
+                  path: /book/byProfile/{profileId}
+                  method: get
+            - http:
+                  path: /book/getAllById
+                  method: get
+            - http:
+                  path: /book/search
+                  method: get
+            - http:
+                  path: /book/{bookId}
+                  method: get
+            - http:
+                  path: /book
+                  method: post
+            - http:
+                  path: /book/uploadimage
+                  method: post
+            - http:
+                  path: /book/{bookId}
+                  method: put
+            - http:
+                  path: /book/{bookId}/editStatus
+                  method: put
+            - http:
+                  path: /book/{bookId}/editQuantity
+                  method: put
+            - http:
+                  path: /book/{bookId}
+                  method: delete
+    order:
+        handler: bin/order
+        events:
+            - http:
+                  path: /order/getAllByProfile/{profileId}
+                  method: get
+            - http:
+                  path: /order/getAllWaiting/{profileId}
+                  method: get
+            - http:
+                  path: /order/{orderId}
+                  method: get
+            - http:
+                  path: /order
+                  method: post
+            - http:
+                  path: /order/{orderId}/updateStatus
+                  method: put
+            - http:
+                  path: /order/{orderId}
+                  method: delete
+    profile:
+        handler: bin/profile
+        events:
+            - http:
+                  path: /profile/{profileId}
+                  method: get
+            - http:
+                  path: /profile/getByCognitoId/{cognitoId}
+                  method: get
+            - http:
+                  path: /profile
+                  method: post
+            - http:
+                  path: /profile/{profileId}
+                  method: put
+            - http:
+                  path: /profile/{profileId}/updateCart
+                  method: put
+            - http:
+                  path: /profile/{profileId}/updateProfileImage
+                  method: put
+            - http:
+                  path: /profile/{profileId}
+                  method: delete
+    review:
+        handler: bin/review
+        events:
+            - http:
+                  path: /review/getAllByBook/{bookId}
+                  method: get
+            - http:
+                  path: /review/{reviewId}
+                  method: get
+            - http:
+                  path: /review
+                  method: post
+            - http:
+                  path: /review/{reviewId}
+                  method: put
+            - http:
+                  path: /review/{reviewId}
+                  method: delete
