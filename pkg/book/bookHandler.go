@@ -85,6 +85,9 @@ func SearchBooksHandler(req events.APIGatewayProxyRequest) (
 	bookType := strings.Split(req.QueryStringParameters["bookType"], ",")
 
 	fmt.Println(deliveryTime, condition, rating, minPrice, maxPrice, bookType, inStock, category, "FILTER PARAMS")
+	fmt.Println(reflect.TypeOf(deliveryTime), reflect.TypeOf(condition), reflect.TypeOf(rating),
+		reflect.TypeOf(minPrice), reflect.TypeOf(maxPrice), reflect.TypeOf(bookType), reflect.TypeOf(inStock),
+		reflect.TypeOf(category), "FILTER PARAMS TYPES")
 	filters := dtos.Filters{
 		MinPrice:      minPrice,
 		MaxPrice:      maxPrice,
@@ -303,7 +306,7 @@ func GetAllBooks() ([]primitive.M, error) {
 }
 
 func SearchBooks(searchTerm string, categories []string, filters dtos.Filters) ([]primitive.M, error) {
-	fmt.Println(filters, "FILTERS STRUCT PRINTING")
+	fmt.Println(filters, searchTerm, "FILTERS STRUCT PRINTING")
 	cur, err := db.DatabaseObj.Collection("book").Find(context.Background(),
 		bson.M{
 			"title":         bson.M{"$regex": ".*" + searchTerm + ".*"},
@@ -313,7 +316,7 @@ func SearchBooks(searchTerm string, categories []string, filters dtos.Filters) (
 			"deliverytime":  bson.M{"$lt": filters.DeliveryTime},
 			"condition":     bson.M{"$in": filters.BookCondition},
 			"booktype":      bson.M{"$in": filters.BookType},
-			"averagerating": bson.M{"$gt": filters.Rating},
+			"averagerating": bson.M{"$gte": filters.Rating},
 			"sellingprice":  bson.M{"$gt": filters.MinPrice, "$lt": filters.MaxPrice},
 		},
 		//bson.D{{"title", primitive.Regex{Pattern: "bh", Options: ""}}},
@@ -419,16 +422,52 @@ func GetBook(bookId string, book *models.Book) error {
 		return errors.New(ErrorFailedToFetchRecord)
 	}
 
-	//book.ReviewCount = GetAllReviewCount(bookId)
-	//reviewStars := GetStarReviewCount(bookId)
-	//book.FiveStar = reviewStars["fiveStar"]
-	//book.FourStar = reviewStars["fourStar"]
-	//book.ThreeStar = reviewStars["threeStar"]
-	//book.TwoStar = reviewStars["twoStar"]
-	//book.OneStar = reviewStars["oneStar"]
+	reviewCount, err1 := GetAllReviewCount(bookId)
+	book.ReviewCount = reviewCount
+	reviewStars, err2 := GetStarReviewCount(bookId)
+	book.FiveStar = reviewStars["fiveStar"]
+	book.FourStar = reviewStars["fourStar"]
+	book.ThreeStar = reviewStars["threeStar"]
+	book.TwoStar = reviewStars["twoStar"]
+	book.OneStar = reviewStars["oneStar"]
+
+	if err1 != nil {
+		return errors.New(ErrorFailedToFetchRecord)
+	}
+
+	if err2 != nil {
+		return errors.New(ErrorFailedToFetchRecord)
+	}
 
 	fmt.Println("book", book)
 	return err
+}
+
+func GetAllReviewCount(bookId string) (int64, error) {
+	itemCount, err := db.DatabaseObj.Collection("review").CountDocuments(context.Background(), bson.M{"book": bookId})
+
+	if err != nil {
+		return 0, errors.New(ErrorFailedToFetchRecord)
+	}
+	fmt.Println(itemCount, reflect.TypeOf(itemCount))
+
+	//GetStarReviewCount(bookId)
+
+	return itemCount, nil
+}
+
+func GetStarReviewCount(bookId string) (map[string]int64, error) {
+	fiveStar, err1 := db.DatabaseObj.Collection("review").CountDocuments(context.Background(), bson.M{"stars": 5, "book": bookId})
+	fourStar, err2 := db.DatabaseObj.Collection("review").CountDocuments(context.Background(), bson.M{"stars": 4, "book": bookId})
+	threeStar, err3 := db.DatabaseObj.Collection("review").CountDocuments(context.Background(), bson.M{"stars": 3, "book": bookId})
+	twoStar, err4 := db.DatabaseObj.Collection("review").CountDocuments(context.Background(), bson.M{"stars": 2, "book": bookId})
+	oneStar, err5 := db.DatabaseObj.Collection("review").CountDocuments(context.Background(), bson.M{"stars": 1, "book": bookId})
+
+	fmt.Println(fiveStar, fourStar, threeStar, twoStar, oneStar)
+	if err1 != nil || err2 != nil || err3 != nil || err4 != nil || err5 != nil {
+		return nil, errors.New(ErrorFailedToFetchRecord)
+	}
+	return map[string]int64{"fiveStar": fiveStar, "fourStar": fourStar, "threeStar": threeStar, "twoStar": twoStar, "oneStar": oneStar}, nil
 }
 
 // Insert one book in the DB
@@ -441,7 +480,9 @@ func CreateBook(book *models.Book) error {
 		return errors.New(ErrorCouldNotUpdateItem)
 	}
 
-	fmt.Println("Inserted a Single Record ", insertResult.InsertedID)
+	book.ID = insertResult.InsertedID.(primitive.ObjectID)
+	fmt.Println(insertResult.InsertedID.(primitive.ObjectID), "hello", insertResult.InsertedID, book.ID)
+	fmt.Println("Inserted a Single Record ", reflect.TypeOf(insertResult.InsertedID), insertResult.InsertedID)
 	return nil
 }
 

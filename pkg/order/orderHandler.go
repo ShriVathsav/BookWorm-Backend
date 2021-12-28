@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"the-book-store/db"
@@ -41,8 +42,8 @@ func GetAllOrdersHandler(req events.APIGatewayProxyRequest) (
 	*events.APIGatewayProxyResponse,
 	error,
 ) {
-	statusValues := req.MultiValueQueryStringParameters["statusValues"]
-	//statusValues := strings.Split(statusValuesRaw, ",")
+	statusValuesRaw := req.QueryStringParameters["statusValues"]
+	statusValues := strings.Split(statusValuesRaw, ",")
 	fmt.Println(statusValues, req.MultiValueQueryStringParameters)
 	profileId := req.PathParameters["profileId"]
 	payload, err := GetAllOrders(profileId, statusValues)
@@ -59,8 +60,8 @@ func GetAllWaitingOrdersHandler(req events.APIGatewayProxyRequest) (
 	*events.APIGatewayProxyResponse,
 	error,
 ) {
-	statusValues := req.MultiValueQueryStringParameters["statusValues"]
-	//statusValues := strings.Split(statusValuesRaw, ",")
+	statusValuesRaw := req.QueryStringParameters["statusValues"]
+	statusValues := strings.Split(statusValuesRaw, ",")
 	fmt.Println(statusValues, "HELLO I`M STATUS VALUES")
 	fmt.Println(statusValues, req.MultiValueQueryStringParameters["statusValues"])
 	profileId := req.PathParameters["profileId"]
@@ -100,18 +101,23 @@ func CreateOrderHandler(req events.APIGatewayProxyRequest) (
 
 	var orders []models.Order
 	var payment dtos.Payment
-	if err := json.Unmarshal([]byte(req.Body), &orders); err != nil {
-		return nil, errors.New(ErrorInvalidData)
+	if err := json.Unmarshal([]byte(req.Body), &payment); err != nil {
+		fmt.Println(err, "PAYMENT ERROR 1")
+		return helpers.ApiResponse(http.StatusBadRequest, ErrorBody{
+			aws.String(err.Error()),
+		})
 	}
 	fmt.Println(payment, req.Body)
 	paymentError := Payment(&payment)
 	if paymentError != nil {
+		fmt.Println(paymentError, "PAYMENT ERROR 2")
 		return helpers.ApiResponse(http.StatusBadRequest, ErrorBody{
 			aws.String(paymentError.Error()),
 		})
 	}
 	orderError := CreateOrder(payment.Orders)
 	if orderError != nil {
+		fmt.Println(orderError, "PAYMENT ERROR 3")
 		return helpers.ApiResponse(http.StatusBadRequest, ErrorBody{
 			aws.String(orderError.Error()),
 		})
@@ -127,11 +133,15 @@ func UpdateOrderStatusHandler(req events.APIGatewayProxyRequest) (
 
 	var order models.Order
 	if err := json.Unmarshal([]byte(req.Body), &order); err != nil {
-		return nil, errors.New(ErrorInvalidData)
+		fmt.Println(err, "UPDATE ORDER 1 ERROR")
+		return helpers.ApiResponse(http.StatusBadRequest, ErrorBody{
+			aws.String(err.Error()),
+		})
 	}
 	orderIdRaw := req.PathParameters["orderId"]
 	err := UpdateOrderStatus(orderIdRaw, order)
 	if err != nil {
+		fmt.Println(err, "UPDATE ORDER 2 ERROR")
 		return helpers.ApiResponse(http.StatusBadRequest, ErrorBody{
 			aws.String(err.Error()),
 		})
@@ -160,9 +170,10 @@ func DeleteOrderHandler(req events.APIGatewayProxyRequest) (
 // get all profiles from the DB and return it
 func GetAllOrders(profileId string, statusValues []string) ([]primitive.M, error) {
 	fmt.Println(profileId, "BUYER ORDER")
+	fmt.Println(statusValues, "STATUS VALUES PLAIN")
 	cur, err := db.DatabaseObj.Collection("order").Find(context.Background(), bson.M{
-		"buyer": profileId,
-		//"status": bson.M{"$in": statusValues},
+		"buyer":  profileId,
+		"status": bson.M{"$in": statusValues},
 	})
 	if err != nil {
 		return nil, errors.New(ErrorFailedToFetchRecord)
@@ -208,9 +219,10 @@ func GetBook(bookId string, book *models.Book) error {
 
 // get all profiles from the DB and return it
 func GetAllWaitingOrders(profileId string, statusValues []string) ([]primitive.M, error) {
+	fmt.Println(statusValues, "STATUS VALUES WAITING")
 	cur, err := db.DatabaseObj.Collection("order").Find(context.Background(), bson.M{
 		"seller": profileId,
-		//"status": bson.M{"$in": statusValues},
+		"status": bson.M{"$in": statusValues},
 		/*
 			"$or": []interface{}{
 				bson.M{"status": bson.A{"DELIVERED", "IN PROGRESS"}},
@@ -263,6 +275,8 @@ func GetOrder(orderId string, order *models.Order) error {
 func CreateOrder(orders []models.Order) error {
 	for index, order := range orders {
 		fmt.Println("At index --- ", index, "order value is --- ", order)
+		order.CreatedAt = time.Now()
+		order.UpdatedAt = time.Now()
 		insertResult, err := db.DatabaseObj.Collection("order").InsertOne(context.Background(), order)
 		if err != nil {
 			return errors.New(ErrorCouldNotUpdateItem)
@@ -270,7 +284,7 @@ func CreateOrder(orders []models.Order) error {
 		fmt.Println("Inserted a Single Record ", insertResult.InsertedID, *insertResult)
 
 		order.ID, _ = primitive.ObjectIDFromHex(insertResult.InsertedID.(primitive.ObjectID).Hex())
-		order.CreatedAt = time.Now()
+
 		var book models.Book
 		UpdateBookQuantityAfterOrder(order.Book, book, order.Quantity)
 	}
@@ -290,13 +304,15 @@ func UpdateBookQuantityAfterOrder(bookId string, book models.Book, orderedQuanti
 
 	bookQuantity := book.StocksLeft
 	filter := bson.M{"_id": id}
-	update := bson.M{"$set": bson.M{"quantity": bookQuantity - orderedQuantity, "in_stock": (bookQuantity - orderedQuantity) > 0}}
+	fmt.Println(bookQuantity-orderedQuantity > 0, bookQuantity, orderedQuantity, "PRINTING QUANTITRIES")
+	finalQuantity := bookQuantity - orderedQuantity
+	update := bson.M{"$set": bson.M{"stocksleft": finalQuantity, "instock": bookQuantity-orderedQuantity > 0}}
 	result, err := db.DatabaseObj.Collection("book").UpdateOne(context.Background(), filter, update)
 	if err != nil {
 		return errors.New(ErrorCouldNotUpdateItem)
 	}
 
-	fmt.Println("modified count: ", result.ModifiedCount)
+	fmt.Println("modified count: ", result, result.ModifiedCount)
 	return nil
 }
 
@@ -306,8 +322,9 @@ func UpdateOrderStatus(orderId string, order models.Order) error {
 	id, _ := primitive.ObjectIDFromHex(orderId)
 	filter := bson.M{"_id": id}
 	update := bson.M{"$set": bson.M{
-		"status":     order.Status,
-		"updated_at": time.Now(),
+		"status":       order.Status,
+		"deliverydate": order.DeliveryDate,
+		"updated_at":   time.Now(),
 	},
 	}
 	result, err := db.DatabaseObj.Collection("order").UpdateOne(context.Background(), filter, update)

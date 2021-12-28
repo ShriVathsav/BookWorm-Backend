@@ -1,4 +1,4 @@
-service: the-book-store
+service: book-worm
 
 frameworkVersion: "2"
 
@@ -35,96 +35,124 @@ functions:
             - http:
                   path: /book
                   method: get
+                  cors: true
             - http:
                   path: /book/byProfile/{profileId}
                   method: get
+                  cors: true
             - http:
                   path: /book/getAllById
                   method: get
+                  cors: true
             - http:
                   path: /book/search
                   method: get
+                  cors: true
             - http:
                   path: /book/{bookId}
                   method: get
+                  cors: true
             - http:
                   path: /book
                   method: post
+                  cors: true
             - http:
                   path: /book/uploadimage
                   method: post
+                  cors: true
             - http:
                   path: /book/{bookId}
                   method: put
+                  cors: true
             - http:
                   path: /book/{bookId}/editStatus
                   method: put
+                  cors: true
             - http:
                   path: /book/{bookId}/editQuantity
                   method: put
+                  cors: true
             - http:
                   path: /book/{bookId}
                   method: delete
+                  cors: true
     order:
         handler: bin/order
         events:
             - http:
                   path: /order/getAllByProfile/{profileId}
                   method: get
+                  cors: true
             - http:
                   path: /order/getAllWaiting/{profileId}
                   method: get
+                  cors: true
             - http:
                   path: /order/{orderId}
                   method: get
+                  cors: true
             - http:
                   path: /order
                   method: post
+                  cors: true
             - http:
                   path: /order/{orderId}/updateStatus
                   method: put
+                  cors: true
             - http:
                   path: /order/{orderId}
                   method: delete
+                  cors: true
     profile:
         handler: bin/profile
         events:
             - http:
                   path: /profile/{profileId}
                   method: get
+                  cors: true
             - http:
                   path: /profile/getByCognitoId/{cognitoId}
                   method: get
+                  cors: true
             - http:
                   path: /profile
                   method: post
+                  cors: true
             - http:
                   path: /profile/{profileId}
                   method: put
+                  cors: true
             - http:
                   path: /profile/{profileId}/updateCart
                   method: put
+                  cors: true
             - http:
                   path: /profile/{profileId}/updateProfileImage
                   method: put
             - http:
                   path: /profile/{profileId}
                   method: delete
+                  cors: true
     review:
         handler: bin/review
         events:
             - http:
                   path: /review/getAllByBook/{bookId}
                   method: get
+                  cors: true
             - http:
                   path: /review/{reviewId}
                   method: get
+                  cors: true
             - http:
                   path: /review
                   method: post
+                  cors: true
             - http:
                   path: /review/{reviewId}
                   method: put
+                  cors: true
             - http:
                   path: /review/{reviewId}
                   method: delete
+                  cors: true

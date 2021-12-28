@@ -16,60 +16,60 @@ type Book struct {
 	ID              primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Title           string             `json:"title,omitempty"`
 	Price           float64            `json:"price,omitempty"`
-	SellingPrice    float64            `json:"selling_price,omitempty"`
+	SellingPrice    float64            `bson:"selling_price" json:"selling_price,omitempty"`
 	Category        string             `json:"category,omitempty"`
 	Description     string             `json:"description,omitempty"`
 	Dimensions      int64              `json:"dimensions,omitempty"`
-	NumberOfPages   int64              `json:"number_of_pages,omitempty"`
-	BookType        string             `json:"book_type,omitempty"`
+	NumberOfPages   int64              `bson:"number_of_pages" json:"number_of_pages,omitempty"`
+	BookType        string             `bson:"book_type" json:"book_type,omitempty"`
 	Author          string             `json:"author,omitempty"`
 	Year            int16              `json:"year,omitempty"`
 	Weight          float64            `json:"weight,omitempty"`
 	Condition       string             `json:"condition,omitempty"`
 	Publisher       string             `json:"publisher,omitempty"`
-	StocksLeft      int64              `json:"stocks_left,omitempty"`
-	DeliveryTime    int64              `json:"delivery_time,omitempty"`
-	CountryOfOrigin string             `json:"country_of_origin,omitempty"`
+	StocksLeft      int64              `bson:"stocks_left" json:"stocks_left,omitempty"`
+	DeliveryTime    int64              `bson:"delivery_time" json:"delivery_time,omitempty"`
+	CountryOfOrigin string             `bson:"country_of_origin" json:"country_of_origin,omitempty"`
 	Language        string             `json:"language,omitempty"`
 	Status          string             `json:"status,omitempty"`
-	AverageRating   float64            `json:"average_rating"`
-	ReviewCount     int64              `json:"review_count"`
-	FiveStar        int64              `json:"five_star"`
-	FourStar        int64              `json:"four_star"`
-	ThreeStar       int64              `json:"three_star"`
-	TwoStar         int64              `json:"two_star"`
-	OneStar         int64              `json:"one_star"`
-	InStock         bool               `json:"in_stock,omitempty"`
+	AverageRating   float64            `bson:"average_rating" json:"average_rating"`
+	ReviewCount     int64              `bson:"review_count" json:"review_count"`
+	FiveStar        int64              `bson:"five_star" json:"five_star"`
+	FourStar        int64              `bson:"four_star" json:"four_star"`
+	ThreeStar       int64              `bson:"three_star" json:"three_star"`
+	TwoStar         int64              `bson:"two_star" json:"two_star"`
+	OneStar         int64              `bson:"one_star" json:"one_star"`
+	InStock         bool               `bson:"in_stock" json:"in_stock,omitempty"`
 	CreatedAt       time.Time          `bson:"created_at" json:"created_at,omitempty"`
 	UpdatedAt       time.Time          `bson:"updated_at" json:"updated_at,omitempty"`
 	Profile         string             `json:"profile,omitempty"`
 	Reviews         []string           `json:"review,omitempty"`
 	Images          []string           `json:"images,omitempty"`
 	CoverImage      string             `json:"coverimage,omitempty"`
-	PeopleBought    []string           `json:"people_bought,omitempty"`
+	PeopleBought    []string           `bson:"people_bought" json:"people_bought,omitempty"`
 }
 
 type Profile struct {
 	ID            primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	CognitoId     string             `json:"cognitoid,omitempty"`
+	CognitoId     string             `bson:"cognito_id" json:"cognito_id,omitempty"`
 	Username      string             `json:"username,omitempty"`
 	Email         string             `json:"email,omitempty"`
-	ProfileImage  string             `json:"profile_image,omitempty"`
+	ProfileImage  string             `bson:"profile_image" json:"profile_image,omitempty"`
 	Phone         string             `json:"phone,omitempty"`
 	Address1      string             `json:"address1,omitempty"`
 	Address2      string             `json:"address2,omitempty"`
 	Pincode       string             `json:"pincode,omitempty"`
 	CreatedAt     time.Time          `bson:"created_at" json:"created_at,omitempty"`
 	UpdatedAt     time.Time          `bson:"updated_at" json:"updated_at,omitempty"`
-	PostedBooks   []string           `json:"posted_books,omitempty"`
+	PostedBooks   []string           `json:"posted_books" json:"posted_books,omitempty"`
 	Orders        []string           `json:"orders,omitempty"`
-	OrdersWaiting []string           `json:"orders_waiting,omitempty"`
+	OrdersWaiting []string           `bson:"orders_waiting" json:"orders_waiting,omitempty"`
 	Cart          []CartItem         `json:"cart,omitempty"`
 }
 
 type Order struct {
 	ID           primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	DeliveryDate string             `json:"delivery_date,omitempty"`
+	DeliveryDate string             `bson:"delivery_date" json:"delivery_date,omitempty"`
 	Seller       string             `json:"seller,omitempty"`
 	Buyer        string             `json:"buyer,omitempty"`
 	Book         string             `json:"book,omitempty"`
@@ -77,8 +77,8 @@ type Order struct {
 	Amount       float64            `json:"amount,omitempty"`
 	Status       string             `json:"status,omitempty"`
 	Reviewed     bool               `json:"reviewed,omitempty"`
-	BuyerName    string             `json:"buyer_name,omitempty"`
-	BuyerEmail   string             `json:"buyer_email,omitempty"`
+	BuyerName    string             `bson:"buyer_name" json:"buyer_name,omitempty"`
+	BuyerEmail   string             `bson:"buyer_email" json:"buyer_email,omitempty"`
 	Phone        string             `json:"phone,omitempty"`
 	Address1     string             `json:"address1,omitempty"`
 	Address2     string             `json:"address2,omitempty"`
@@ -101,7 +101,7 @@ type Review struct {
 type Cart struct {
 	ID        primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
 	Profile   *Profile           `json:"profile,omitempty"`
-	CartItems []*CartItem        `json:"cart_items,omitempty"`
+	CartItems []*CartItem        `json:"cart_items" json:"cart_items,omitempty"`
 	CreatedAt time.Time          `bson:"created_at" json:"created_at,omitempty"`
 	UpdatedAt time.Time          `bson:"updated_at" json:"updated_at,omitempty"`
 }

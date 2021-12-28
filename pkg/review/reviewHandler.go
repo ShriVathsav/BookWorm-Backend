@@ -207,6 +207,8 @@ func GetStarReviewCount(bookId string) (map[string]int64, error) {
 
 // Insert one task in the DB
 func insertReview(review models.Review) error {
+	review.CreatedAt = time.Now()
+	review.UpdatedAt = time.Now()
 	insertResult, err := db.DatabaseObj.Collection("review").InsertOne(context.Background(), review)
 
 	if err != nil {

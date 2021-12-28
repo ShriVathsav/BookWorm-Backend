@@ -12,10 +12,7 @@ import (
 const connectionString = "mongodb+srv://bookappshriv:bookappshriv@cluster0.jaqan.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 
 // Database Name
-const DbName = "myFirstDatabase"
-
-// Collection name
-const collName = "review"
+const DbName = "bookWormDB"
 
 // collection object/instance
 var DatabaseObj *mongo.Database
